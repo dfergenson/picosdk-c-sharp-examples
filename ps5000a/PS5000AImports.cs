@@ -20,7 +20,8 @@ namespace PS5000AImports
 	class Imports
 	{
 		#region Constants
-		private const string _DRIVER_FILENAME = "ps5000a.dll";
+		private const string _DRIVER_FILENAME = "C:/Program Files/Pico Technology/SDK/lib/ps5000a.dll";
+//		private const string _DRIVER_FILENAME = "ps5000a.dll";
 
 		#endregion
 
@@ -196,6 +197,14 @@ namespace PS5000AImports
 			PS5000A_BW_20MHZ
 		}
 
+
+		//DAVIO Added these to get complex triggering working
+		public enum PS5000A_CONDITIONS_INFO : uint
+        {
+			PS5000A_CLEAR,
+			PS5000A_ADD
+        }
+
 		#endregion
 
 		# region Driver Structs
@@ -227,6 +236,72 @@ namespace PS5000AImports
 				this.ThresholdMode = thresholdMode;
 			}
 		}
+
+		//DAVIO Added this to get complex triggering working.
+		[StructLayout(LayoutKind.Sequential, Pack = 1)]
+		public struct tPS5000ATriggerChannelPropertiesV2
+		{
+			public short thresholdUpper;
+			public ushort hysteresisUpper;
+			public short thresholdLower;
+			public ushort hysteresisLower;
+			public Channel Channel;
+
+			public tPS5000ATriggerChannelPropertiesV2(
+				short thresholdUpper,
+				ushort hysteresisUpper,
+				short thresholdLower,
+				ushort hysteresisLower,
+				Channel channel)
+			{
+				this.thresholdUpper = thresholdUpper;
+				this.hysteresisUpper = hysteresisUpper;
+				this.thresholdLower = thresholdLower;
+				this.hysteresisLower = hysteresisLower;
+				this.Channel = channel;
+			}
+		}
+
+
+		//DAVIO Added this to get complex triggering working.
+		[StructLayout(LayoutKind.Sequential, Pack = 1)]
+		public struct tPS5000ADirection
+		{
+			public Channel channel;
+			public ThresholdDirection direction;
+			public ThresholdMode mode;
+
+			public tPS5000ADirection(
+				Channel channel,
+				ThresholdDirection direction,
+				ThresholdMode mode)
+			{
+				this.channel = channel;
+				this.direction = direction;
+				this.mode = mode;
+			}
+		} 
+
+
+		[StructLayout(LayoutKind.Sequential, Pack = 1)]
+		public struct tPS5000ACondition
+        {
+			public Channel source;
+			public TriggerState condition;
+
+			public tPS5000ACondition(
+				Channel source,
+				TriggerState condition)
+            {
+				this.source = source;
+				this.condition = condition;
+            }
+        }
+
+
+			
+
+
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		public struct TriggerConditions
@@ -290,6 +365,40 @@ namespace PS5000AImports
 				this.Digital = digital;
 			}
 		}
+
+/*		//DAVIO Added this to get complex triggering working.
+		[StructLayout(LayoutKind.Sequential, Pack = 1)]
+		public struct tPS5000ADirection
+		{
+			public TriggerState ChannelA;
+			public TriggerState ChannelB;
+			public TriggerState ChannelC;
+			public TriggerState ChannelD;
+			public TriggerState External;
+			public TriggerState Aux;
+			public TriggerState Pwq;
+			public TriggerState Digital;
+
+			public tPS5000ADirection(
+				TriggerState channelA,
+				TriggerState channelB,
+				TriggerState channelC,
+				TriggerState channelD,
+				TriggerState external,
+				TriggerState aux,
+				TriggerState pwq,
+				TriggerState digital)
+			{
+				this.ChannelA = channelA;
+				this.ChannelB = channelB;
+				this.ChannelC = channelC;
+				this.ChannelD = channelD;
+				this.External = external;
+				this.Aux = aux;
+				this.Pwq = pwq;
+				this.Digital = digital;
+			}
+		} */
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		public struct PwqConditions
@@ -415,6 +524,53 @@ namespace PS5000AImports
 																ThresholdDirection ext,
 																ThresholdDirection aux);
 
+		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerChannelProperties")]
+		public static extern uint SetTriggerChannelProperties(
+															short handle,
+															TriggerChannelProperties[] channelProperties,
+															short nChannelProperties,
+															short auxOutputEnable,
+															int autoTriggerMilliseconds);
+
+		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerChannelConditions")]
+		public static extern uint SetTriggerChannelConditions(
+																	short handle,
+																	TriggerConditions[] conditions,
+																	short nConditions);
+
+		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerDelay")]
+		public static extern uint SetTriggerDelay(short handle, uint delay);
+
+
+
+
+
+
+		//DAVIO Added this to get complex triggering working.
+		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerChannelPropertiesV2")]
+		public static extern uint SetTriggerChannelPropertiesV2(
+
+																	short handle,
+																	tPS5000ATriggerChannelPropertiesV2[] channelProperties,
+																	short nChannelProperties,
+																	short auxOutputEnable);
+
+		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerChannelConditionsV2")]
+		public static extern uint SetTriggerChannelConditionsV2(
+																	short handle,
+																	tPS5000ACondition[] conditions,
+																	short nConditions,
+																	PS5000A_CONDITIONS_INFO info);
+
+		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerChannelDirectionsV2")]
+		public static extern uint SetTriggerChannelDirectionsV2(
+																	short handle,
+																	tPS5000ADirection[] directions,
+																	short nDirections);
+
+
+
+
 		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aGetTimebase")]
 		public static extern uint GetTimebase(
 												 short handle,
@@ -455,22 +611,6 @@ namespace PS5000AImports
 														short autoTriggerMs);
 
 
-		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerChannelProperties")]
-		public static extern uint SetTriggerChannelProperties(
-																	short handle,
-																	TriggerChannelProperties[] channelProperties,
-																	short nChannelProperties,
-																	short auxOutputEnable,
-																	int autoTriggerMilliseconds);
-
-		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerChannelConditions")]
-		public static extern uint SetTriggerChannelConditions(
-																	short handle,
-																	TriggerConditions[] conditions,
-																	short nConditions);
-
-		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetTriggerDelay")]
-		public static extern uint SetTriggerDelay(short handle, uint delay);
 
 		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aGetUnitInfo")]
 		public static extern uint GetUnitInfo(
@@ -579,6 +719,7 @@ namespace PS5000AImports
 														SigGenTrigSource triggerSource,
 														short extInThreshold);
 
+		//DAVIO Added this to get complex triggering working.
 		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aSetSigGenBuiltInV2")]
 		public static extern uint SetSigGenBuiltInV2(
 														short handle,

@@ -137,7 +137,8 @@ namespace PS5000A
        }
 
 
-       private void buttonOpen_Click(object sender, EventArgs e)
+
+        private void buttonOpen_Click(object sender, EventArgs e)
         {
             StringBuilder UnitInfo = new StringBuilder(80);
 
@@ -212,8 +213,34 @@ namespace PS5000A
             uint delay = 0;
             short threshold = 25000;
             short auto = 0;
+            Imports.tPS5000ATriggerChannelPropertiesV2[] properties = new Imports.tPS5000ATriggerChannelPropertiesV2[1];
 
-            status = Imports.SetSimpleTrigger(_handle, enable, Imports.Channel.ChannelA, threshold, Imports.ThresholdDirection.Rising, delay, auto);
+//            status = Imports.SetSimpleTrigger(_handle, enable, Imports.Channel.ChannelA, threshold, Imports.ThresholdDirection.Rising, delay, auto);
+
+            properties[0].thresholdLower = 25000;
+            properties[0].thresholdUpper = 25000;
+            properties[0].hysteresisLower = 100;
+            properties[0].hysteresisUpper = 100;
+            properties[0].Channel = Imports.Channel.ChannelA;
+
+            Imports.tPS5000ACondition[] conditions = new Imports.tPS5000ACondition[1];
+            conditions[0].source = Imports.Channel.ChannelA;
+            conditions[0].condition = Imports.TriggerState.True;
+
+            Imports.tPS5000ADirection[] directions = new Imports.tPS5000ADirection[1];
+            directions[0].channel = Imports.Channel.ChannelA;
+            directions[0].direction = Imports.ThresholdDirection.Above;
+            directions[0].mode = Imports.ThresholdMode.Level;
+
+            status = Imports.SetTriggerChannelConditionsV2(_handle, conditions, 1, Imports.PS5000A_CONDITIONS_INFO.PS5000A_CLEAR);
+
+            status = Imports.SetTriggerChannelPropertiesV2(_handle, properties, 1, 1);
+
+            status = Imports.SetTriggerChannelConditionsV2(_handle, conditions, 1, Imports.PS5000A_CONDITIONS_INFO.PS5000A_ADD);
+
+            status = Imports.SetTriggerChannelDirectionsV2(_handle, directions, 1);
+
+            status = Imports.SetAutoTriggerMicroSeconds(_handle, 0);
 
             _ready = false;
             _callbackDelegate = BlockCallback;
@@ -230,12 +257,14 @@ namespace PS5000A
             PinnedArray<short>[] maxPinned = new PinnedArray<short>[_channelCount];
 
             int timeIndisposed;
-                short[] minBuffers = new short[sampleCount];
-                short[] maxBuffers = new short[sampleCount];
-                minPinned[0] = new PinnedArray<short>(minBuffers);
-                maxPinned[0] = new PinnedArray<short>(maxBuffers);
-                status = Imports.SetDataBuffers(_handle, Imports.Channel.ChannelA, maxBuffers, minBuffers, (int)sampleCount, 0, Imports.RatioMode.None);
-                textMessage.AppendText("BlockData\n");
+            short[] databuffer = new short[sampleCount];
+            //short[] minBuffers = new short[sampleCount];
+            //short[] maxBuffers = new short[sampleCount];
+            //minPinned[0] = new PinnedArray<short>(minBuffers);
+            //maxPinned[0] = new PinnedArray<short>(maxBuffers);
+            //status = Imports.SetDataBuffers(_handle, Imports.Channel.ChannelA, maxBuffers, minBuffers, (int)sampleCount, 0, Imports.RatioMode.None);
+            status = Imports.SetDataBuffer(_handle, Imports.Channel.ChannelA, databuffer, (int)sampleCount, 0, Imports.RatioMode.None);
+            textMessage.AppendText("BlockData\n");
 
             /*Find the maximum number of samples and the time interval(in nanoseconds).
             * If the function returns PICO_OK, the timebase will be used.
@@ -287,12 +316,18 @@ namespace PS5000A
                 if (status == (short)StatusCodes.PICO_OK)
                 {
                     textMessage.AppendText("Have Data\n");
-                    for (x = 0; x < sampleCount; x++)
-                    {
-                       data = maxBuffers[x].ToString();
-                       textData.AppendText(data);
-                       textData.AppendText("\n");
-                    }
+                    chartData.Series[0].Points.Clear();
+
+                    for (int I = 0; I < 1000; I++) {
+                    chartData.Series[0].Points.AddXY(I, databuffer[I]);
+                }
+//                    for (x = 0; x < sampleCount; x++)
+
+//                    {
+//                       data = maxBuffers[x].ToString();
+//                       textData.AppendText(data);
+//                       textData.AppendText("\n");
+//                    }
 
 
                 }
@@ -323,3 +358,99 @@ namespace PS5000A
 
     }
 }
+
+/*    PICO_STATUS setTrigger(unitType* UNIT,
+        PS5000A_TRIGGER_CHANNEL_PROPERTIES_V2* channelProperties,
+        int16_t nChannelProperties,
+        PS5000A_CONDITION* triggerConditions,
+        int16_t nTriggerConditions,
+        PS5000A_DIRECTION* directions,
+        uint16_t nDirections,
+
+struct tPwq * pwq,
+uint32_t delay,
+uint64_t autoTriggerUs)
+{
+PICO_STATUS status;
+    PS5000A_CONDITIONS_INFO info = PS5000A_CLEAR;
+    PS5000A_CONDITIONS_INFO pwqInfo = PS5000A_CLEAR;
+
+    int16_t auxOutputEnabled = 0; // Not used by function call
+
+    status = ps5000aSetTriggerChannelPropertiesV2(UNIT.handle, channelProperties, nChannelProperties, auxOutputEnabled);
+
+if (status != PICO_OK) 
+{
+    printf("setTrigger:ps5000aSetTriggerChannelPropertiesV2 ------ Ox%08lx \n", status);
+    return status;
+}
+
+if (nTriggerConditions != 0)
+{
+    info = (PS5000A_CONDITIONS_INFO) (PS5000A_CLEAR | PS5000A_ADD); // Clear and add trigger condition specified unless no trigger conditions have been specified
+}
+
+status = ps5000aSetTriggerChannelConditionsV2(unit->handle, triggerConditions, nTriggerConditions, info);
+
+if (status != PICO_OK)
+{
+printf("setTrigger:ps5000aSetTriggerChannelConditionsV2 ------ 0x%08lx \n", status);
+return status;
+}
+
+status = ps5000aSetTriggerChannelDirectionsV2(unit->handle, directions, nDirections);
+
+if (status != PICO_OK)
+{
+printf("setTrigger:ps5000aSetTriggerChannelDirectionsV2 ------ 0x%08lx \n", status);
+return status;
+}
+
+status = ps5000aSetAutoTriggerMicroSeconds(unit->handle, autoTriggerUs);
+
+if (status != PICO_OK)
+{
+printf("setTrigger:ps5000aSetAutoTriggerMicroSeconds ------ 0x%08lx \n", status);
+return status;
+}
+
+status = ps5000aSetTriggerDelay(unit->handle, delay);
+
+if (status != PICO_OK)
+{
+printf("setTrigger:ps5000aSetTriggerDelay ------ 0x%08lx \n", status);
+return status;
+}
+
+// Clear and add pulse width qualifier condition, clear if no pulse width qualifier has been specified
+if (pwq->nPwqConditions != 0)
+{
+pwqInfo = (PS5000A_CONDITIONS_INFO)(PS5000A_CLEAR | PS5000A_ADD);
+}
+
+status = ps5000aSetPulseWidthQualifierConditions(unit->handle, pwq->pwqConditions, pwq->nPwqConditions, pwqInfo);
+
+if (status != PICO_OK)
+{
+printf("setTrigger:ps5000aSetPulseWidthQualifierConditions ------ 0x%08lx \n", status);
+return status;
+}
+
+status = ps5000aSetPulseWidthQualifierDirections(unit->handle, pwq->pwqDirections, pwq->nPwqDirections);
+
+if (status != PICO_OK)
+{
+printf("setTrigger:ps5000aSetPulseWidthQualifierDirections ------ 0x%08lx \n", status);
+return status;
+}
+
+status = ps5000aSetPulseWidthQualifierProperties(unit->handle, pwq->lower, pwq->upper, pwq->type);
+
+if (status != PICO_OK)
+{
+printf("setTrigger:ps5000aSetPulseWidthQualifierProperties ------ Ox%08lx \n", status);
+return status;
+}
+
+return status; 
+}*/

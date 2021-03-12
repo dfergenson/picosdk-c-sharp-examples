@@ -39,6 +39,9 @@ namespace PS5000A
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.buttonOpen = new System.Windows.Forms.Button();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabUnit = new System.Windows.Forms.TabPage();
@@ -53,11 +56,15 @@ namespace PS5000A
             this.buttonStart = new System.Windows.Forms.Button();
             this.tabAbout = new System.Windows.Forms.TabPage();
             this.textBoxUnitInfo = new System.Windows.Forms.TextBox();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.chartData = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.tabControl.SuspendLayout();
             this.tabUnit.SuspendLayout();
             this.tabChannels.SuspendLayout();
             this.tabGetData.SuspendLayout();
             this.tabAbout.SuspendLayout();
+            this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chartData)).BeginInit();
             this.SuspendLayout();
             // 
             // buttonOpen
@@ -76,6 +83,7 @@ namespace PS5000A
             this.tabControl.Controls.Add(this.tabChannels);
             this.tabControl.Controls.Add(this.tabGetData);
             this.tabControl.Controls.Add(this.tabAbout);
+            this.tabControl.Controls.Add(this.tabPage1);
             this.tabControl.Location = new System.Drawing.Point(12, 12);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
@@ -203,6 +211,33 @@ namespace PS5000A
             this.textBoxUnitInfo.Size = new System.Drawing.Size(179, 230);
             this.textBoxUnitInfo.TabIndex = 3;
             // 
+            // tabPage1
+            // 
+            this.tabPage1.Controls.Add(this.chartData);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(566, 255);
+            this.tabPage1.TabIndex = 4;
+            this.tabPage1.Text = "tabPage1";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // chartData
+            // 
+            chartArea1.Name = "ChartArea1";
+            this.chartData.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartData.Legends.Add(legend1);
+            this.chartData.Location = new System.Drawing.Point(6, 6);
+            this.chartData.Name = "chartData";
+            series1.ChartArea = "ChartArea1";
+            series1.Legend = "Legend1";
+            series1.Name = "seriesData";
+            this.chartData.Series.Add(series1);
+            this.chartData.Size = new System.Drawing.Size(554, 213);
+            this.chartData.TabIndex = 0;
+            this.chartData.Text = "chart1";
+            // 
             // PS5000ABlockForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -218,6 +253,8 @@ namespace PS5000A
             this.tabGetData.PerformLayout();
             this.tabAbout.ResumeLayout(false);
             this.tabAbout.PerformLayout();
+            this.tabPage1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.chartData)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -238,6 +275,8 @@ namespace PS5000A
         private System.Windows.Forms.TextBox textData;
         private System.Windows.Forms.Button buttonStart;
         private System.Windows.Forms.TextBox textMessage;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartData;
     }
 }
 
